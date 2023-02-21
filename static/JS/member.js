@@ -196,6 +196,8 @@ function update_photo(){
     
     const formData = new FormData();
     const a=formData.append('img', newFile);
+    console.log(formData)
+    
     fetch("/api/images", {
         method: 'POST',
         body: formData,

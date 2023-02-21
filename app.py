@@ -83,7 +83,6 @@ def api_attraction():
                 # 圖片處理
                 mycursor.execute("SELECT group_concat(photo) FROM attraction INNER JOIN photo ON attraction.id=photo.photo_id WHERE attraction.id=%s group by photo.photo_id" ,(id,))
                 photo = mycursor.fetchone()
-                
                 photo_str = photo[0].split(',')
                 attraction_list={
                     "id":id ,
@@ -121,6 +120,15 @@ def api_attraction():
             mycursor.close()
             connection_object.close()
             return json_result,200
+        else:
+            data={
+            "error": True,
+            "message":"沒有資料"
+            }
+            json_result=jsonify(data)
+            mycursor.close()
+            connection_object.close()
+            return json_result,400
     except:
         data={
             "error": True,
@@ -862,6 +870,7 @@ def updateImg():
         member_name=decode["name"]
         member_email=decode["email"]
         img=request.files["img"]
+        print(img)
         s3.Bucket('taipeibucket').put_object(Key=img.filename, Body=img)
         return "上傳成功"  
     else:
