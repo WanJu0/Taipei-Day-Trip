@@ -3,11 +3,8 @@ function attractionID()
     let s = location.href;
     let path = location.pathname;
 
-    // 這邊是將頁面抓到輸入的字串
     fetch(`/api/${path}`, {})
     .then((response) => {
-        // 這裡會得到一個 ReadableStream 的物件
-        // 可以透過 blob(), json(), text() 轉成可用的資訊
         return response.json(); 
     }).then((jsonData) => {
         let title = jsonData.data.name;
@@ -18,26 +15,26 @@ function attractionID()
         let transport= jsonData.data.transport;
         let images= jsonData.data.images;
     
-        // 將景點名稱放進去
+       
         let journeyCategory=document.getElementById("journey_category"); 
         categoryNode = document.createTextNode(category+" at "+mrt);
         journeyCategory.appendChild(categoryNode);
 
-        // 將放進去
+       
         let journeyTitle=document.getElementById("journey_title"); 
         titleNode = document.createTextNode(title);
         journeyTitle.appendChild(titleNode);
         
-        // 將景點介紹放進去
+      
         let informationContent=document.getElementById("attraction_description"); 
         informationNode = document.createTextNode(jsonData.data.description);
         informationContent.appendChild(informationNode);
-        // 將景點地址放進去
+       
         let addressContent=document.getElementById("address_name"); 
         addressNode = document.createTextNode(jsonData.data.address);
         addressContent.appendChild(addressNode);
 
-        // 將交通資訊放進去
+       
         let transportContent=document.getElementById("transport_content"); 
         transportNode = document.createTextNode(transport);
         transportContent.appendChild(transportNode);
@@ -115,14 +112,13 @@ function newBooking()
     const pathUrl = location.pathname ;
     const strAry = pathUrl.split('/attraction/');
     const id = strAry[1]
-    // console.log(id);
-    
+   
     const dateElement = document.getElementById("date");
     const date = dateElement.value;
-    // console.log(date);
+   
     const dayElement = document.getElementById("daytime_cost");
     const day = dayElement.style.display;
-    // console.log(day);
+   
     let time="";
     let price="";
     if(day=="none"){

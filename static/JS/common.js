@@ -7,7 +7,7 @@ function closeLogin() {
     let element = document.getElementById("overlay_login")
     element.style.display = "none"
 } 
-// 開關註冊
+
 function openSignup() {
     let element = document.getElementById("overlay_signup")
     element.style.display = "block"
@@ -40,8 +40,6 @@ function apiSingup(){
         })
     })
     .then((response) => {
-        // 這裡會得到一個 ReadableStream 的物件
-        // 可以透過 blob(), json(), text() 轉成可用的資訊
         return response.json(); 
     }).then((jsonData) => {
        
@@ -80,8 +78,7 @@ function apiSingin()
     })
     .then(function(response){
         if(response.status ==400){
-            // console.log(`Response status was not 200:${response.status}`);
-            
+           
             document.getElementById("signin_message").innerHTML = "帳號密碼有誤"
             return ;
         }
@@ -94,7 +91,6 @@ function apiSingin()
     })
     
 }
-// 寫一個函式可以判斷使用者是否有登入
 let bookingName="";
 let bookingEmail="";
 function check()
@@ -103,8 +99,6 @@ function check()
         method: "GET" ,
     })
     .then((response) => {
-        // 這裡會得到一個 ReadableStream 的物件
-        // 可以透過 blob(), json(), text() 轉成可用的資訊
         return response.json(); 
     }).then((jsonData) => {
         
@@ -138,8 +132,6 @@ function logout()
         method: "DELETE" ,
     })
     .then((response) => {
-        // 這裡會得到一個 ReadableStream 的物件
-        // 可以透過 blob(), json(), text() 轉成可用的資訊
         return response.json(); 
     }).then((jsonData) => {
         window.location.replace(location.href)
@@ -163,9 +155,8 @@ function reservation()
 
 }
 
-// 在member 頁面時也要確認是否有登入
 function member() {
-    // 要先確認是否有登入！
+ 
     const loginOrnot = document.querySelector(".right_logout");
     const login = loginOrnot.style.display;
 
@@ -173,6 +164,5 @@ function member() {
         openLogin();
         return
     }
-    // 如有登入就跳轉到booking
     window.location.replace("/member");
 }

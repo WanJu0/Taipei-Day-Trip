@@ -64,19 +64,12 @@ function onSubmit(event) {
             console.log('get prime error ' + result.msg)
             return
         }
-        // console.log('get prime 成功，prime: ' + result.card.prime)
-        // console.log(total_price,"pay.js")
-        // console.log(attractionName,"讀取全域的預約行程有哪些")
         const bookingnameElement= document.getElementById("input_contact_name");
         const bookingName = bookingnameElement.value;
         const bookingemailElement = document.getElementById("input_contact_mail");
         const bookingEmail = bookingemailElement.value;
         const bookingphoneElement = document.getElementById("input_contact_phone");
         const bookingPhone = bookingphoneElement.value;
-        // console.log(bookingName)
-        // console.log(bookingEmail)
-        // console.log(bookingPhone)
-        // 在得到prime時,將資訊傳給後端
         data = {
             "prime": result.card.prime,
             "order":{
@@ -99,8 +92,6 @@ function onSubmit(event) {
             })
         })
         .then((response) => {
-            // 這裡會得到一個 ReadableStream 的物件
-            // 可以透過 blob(), json(), text() 轉成可用的資訊
             return response.json(); 
         }).then((jsonData) => {
            if (jsonData.data != null) {
@@ -108,9 +99,5 @@ function onSubmit(event) {
             window.location.href = `/thankyou?number=${jsonData.data.number}`;
             }
         })
-        console.log(data)
-
-        // send prime to your server, to pay with Pay by Prime API .
-        // Pay By Prime Docs: https://docs.tappaysdk.com/tutorial/zh/back.html#pay-by-prime-api
     })
 }

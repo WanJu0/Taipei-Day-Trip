@@ -63,10 +63,8 @@ def api_attraction():
             result = mycursor.fetchall()
            
         else:
-            # 模糊比對景點名稱或分類完全比對
             mycursor.execute("SELECT * FROM attraction WHERE category=%s or name LIKE %s LIMIT %s ,%s",(keyword ,"%"+keyword+"%", page*12, 12))
             result = mycursor.fetchall()
-            # print(result)
         if result != None:
             data_value=[]
             for i in range(0,len(result)):
@@ -80,7 +78,6 @@ def api_attraction():
                 lat = result[i][7]
                 lng = result[i][8]
                 
-                # 圖片處理
                 mycursor.execute("SELECT group_concat(photo) FROM attraction INNER JOIN photo ON attraction.id=photo.photo_id WHERE attraction.id=%s group by photo.photo_id" ,(id,))
                 photo = mycursor.fetchone()
                 photo_str = photo[0].split(',')
@@ -146,7 +143,6 @@ def attraction_ID(attractionID):
     try:
         mycursor.execute("SELECT * FROM attraction WHERE id=%s",(attractionID,))
         result = mycursor.fetchone()
-        # print(type(result))
         if result != None:
             id= result[0]
             name = result[1]
@@ -242,11 +238,9 @@ def categories():
 
 @app.route("/api/user",methods=["POST"])
 def signup():
-    # 從前端接收資料
     name=request.json["name"]
     email=request.json["email"]
     password=request.json["password"]
-    #註冊帳號密碼不能為空
     if name=="" or email=="" or password=="":
         data={
             "error":True,
@@ -254,15 +248,11 @@ def signup():
         }
         json_result=jsonify(data)
         return json_result,400
-    
-    # 和資料庫做互動
     connection_object = connection_pool.get_connection()
     mycursor = connection_object.cursor()
     try:
-        # 檢查姓名 帳號是否存在
         mycursor.execute('SELECT * FROM member WHERE name=%s or email =%s ' ,(name, email))
         result = mycursor.fetchone()
-        # print(result)
         if result != None:
             data={
                 "error":True,
@@ -272,14 +262,12 @@ def signup():
             mycursor.close()
             connection_object.close()
             return json_result,400
-        # 把資料放進資料庫 完成註冊
         mycursor.execute("INSERT INTO member (name, email, password ) VALUES (%s, %s, %s)" ,(name,email,password))
         connection_object.commit()
         print(mycursor.rowcount, "record inserted.")
         data={
             "ok":True,
         }
-        # print(data)
         json_result=jsonify(data)
         mycursor.close()
         connection_object.close()
@@ -293,28 +281,23 @@ def signup():
         mycursor.close()
         connection_object.close()
         return json_result,500
-# 登入系統！
+
 @app.route("/api/user/auth",methods=["PUT"])
 def signin():   
     email=request.json["email"]
     password=request.json["password"]
-    #登入帳號密碼不能為空
     if email=="" or password=="":
         data={
             "error":True,
             "message":"請輸入帳號密碼"
         }
-        # print(data)
         json_result=jsonify(data)
         return json_result,400
-    # 和資料庫做互動
     connection_object = connection_pool.get_connection()
     mycursor = connection_object.cursor()
     try:
-        # 檢查帳號密碼是否正確
         mycursor.execute('SELECT * FROM member WHERE email=%s AND password =%s' ,(email, password))
         result = mycursor.fetchone()
-        # print(result)
         if result==None:
             mycursor.close()
             connection_object.close()
@@ -322,10 +305,8 @@ def signin():
                 "error":True,
                 "message":"帳號密碼有誤"
             }
-            # print(data)
             json_result=jsonify(data)
             return json_result,400
-        # 用jwt產生token
         
         encoded_jwt = jwt.encode({
             "id":result[0],
@@ -333,7 +314,6 @@ def signin():
             "email":result[2],
             # "exp": datetime.utcnow() + timedelta(minutes=1)
             },"secretJWT", algorithm='HS256')
-        # print(encoded_jwt)
         data={
             "ok":True,
         }
@@ -384,20 +364,18 @@ def signout():
 
 @app.route("/api/booking",methods=["POST"])
 def apiBooking():
-    # 從前端接收資料
    
     attraction=request.json["attraction"]
     date=request.json["date"]
     time=request.json["time"]
     price=request.json["price"]
-    # 一定要先登入,先檢查是否有登入
+
     cookie=request.cookies.get("Set-Cookie")
-    print(cookie)
     if cookie != None:
         decode= jwt.decode(cookie, "secretJWT", ['HS256'])
         member_id=decode["id"]
         member_name=decode["name"]
-        # 每個資料都不能為空
+
         if time=="" or date=="":
             data={
                 "error":True,
@@ -405,10 +383,10 @@ def apiBooking():
             }
             json_result=jsonify(data)
             return json_result,400
-        # 和資料庫做互動
+
         connection_object = connection_pool.get_connection()
         mycursor = connection_object.cursor()
-        # 這邊要把資料放進去資料庫,並回傳狀態
+
         try:
             mycursor.execute("INSERT INTO reservation (member_id, attraction_id, date, time, price) VALUES (%s, %s, %s, %s, %s)" ,(member_id,attraction, date, time, price))
             connection_object.commit()
@@ -447,11 +425,10 @@ def getBooking():
         decode= jwt.decode(cookie, "secretJWT", ['HS256'])
         member_id=decode["id"]
         member_name=decode["name"]
-        # print(member_name)
-        # 和資料庫做互動
+    
         connection_object = connection_pool.get_connection()
         mycursor = connection_object.cursor()
-        # 還需要利用attraction id 去抓出景點資訊
+       
         mycursor.execute('SELECT attraction.id, attraction.name,attraction.address,reservation.reservation_id,reservation.member_id,reservation.date,reservation.time,reservation.price FROM attraction INNER JOIN reservation ON attraction.id=reservation.attraction_id WHERE member_id=%s' ,(member_id,))
         result = mycursor.fetchall()
         if result != None:
@@ -492,18 +469,15 @@ def getBooking():
             }
             
             json_result=jsonify(data)
-            # print(json_result)
             mycursor.close()
             connection_object.close()
             return make_response(json_result,200)  
-            # return data, 200
         else:
             data={
 
                 "data":None
             }
             json_result=jsonify(data)
-            # print(json_result)
             mycursor.close()
             connection_object.close()
             return make_response(json_result,200)  
@@ -512,22 +486,18 @@ def getBooking():
                 "error":True,
                 "message":"請先登入會員"
             }
-        # print(data)
         json_result=jsonify(data) 
         return make_response(json_result,403)  
 @app.route("/api/booking",methods=["DELETE"])
 def deleteBooking():
     reservation_id=request.json["reservationID"]
-    print(reservation_id,"llll")
-    # 一定要先登入,先檢查是否有登入
     cookie=request.cookies.get("Set-Cookie")
-    # print(cookie)
+
     if cookie != None:
         decode= jwt.decode(cookie, "secretJWT", ['HS256'])
         member_id=decode["id"]
         member_name=decode["name"]
-        # print(member_name)
-        # 和資料庫做互動
+    
         connection_object = connection_pool.get_connection()
         mycursor = connection_object.cursor()
         mycursor.execute("DELETE FROM reservation WHERE reservation_id=%s " ,(reservation_id,))
@@ -546,7 +516,7 @@ def deleteBooking():
                 "error":True,
                 "message":"請在刪除一次"
             }
-            # print(data)
+           
             json_result=jsonify(data) 
             mycursor.close()
             connection_object.close()
@@ -558,21 +528,18 @@ def deleteBooking():
                 "error":True,
                 "message":"請先登入會員"
             }
-        # print(data)
+       
         json_result=jsonify(data) 
         return make_response(json_result,403)  
 @app.route("/api/orders",methods=["POST"])
 def apiOrders():
-    # 一定要先登入,先檢查是否有登入
+    
     cookie=request.cookies.get("Set-Cookie")
     if cookie != None:
         decode= jwt.decode(cookie, "secretJWT", ['HS256'])
         member_id=decode["id"]
         member_name=decode["name"]
-        # 從前端接收資料
-    
-        # 預定訂單編號的所有列表
-        
+       
         reservationNum=len(request.json["order"]["trip"])
         prime=request.json["prime"]
         total_price=request.json["order"]["price"]
@@ -580,15 +547,13 @@ def apiOrders():
         email=request.json["order"]["contact"]["email"]
         phone=request.json["order"]["contact"]["phone"]
         payment_status="未付款"
-        # 產生當下日期時間
+       
         now = datetime.datetime.now()
-        # 產生六位隨機號碼
-        rand = ''.join(str(random.randint(0, 9)) for _ in range(6))
-        # 將日期時間和隨機號碼組合成訂單編號
-        order_number = f"{now.strftime('%Y%m%d%H%M%S')}{rand}"
-        print(order_number)
         
-        # 每個資料都不能為空
+        rand = ''.join(str(random.randint(0, 9)) for _ in range(6))
+      
+        order_number = f"{now.strftime('%Y%m%d%H%M%S')}{rand}"
+    
         if name=="" or email=="" or phone=="":
             data={
                 "error":True,
@@ -614,8 +579,6 @@ def apiOrders():
                 mycursor.execute("DELETE FROM reservation WHERE reservation_id=%s " ,(reservation_id,))
                 connection_object.commit()
                 print(mycursor.rowcount, "record delete.")
-
-                return "更新成功",200
             except:
                 data={
                     "error": True,
@@ -645,8 +608,7 @@ def apiOrders():
             "x-api-key": partner_key,
         }
         response=requests.post("https://sandbox.tappaysdk.com/tpc/payment/pay-by-prime",headers=myheaders,json= mydata).json()
-        print(response["status"])
-        print(response)
+
         # 如果匯款成功,則傳訂單編號給前端並顯示訂單完成
         if response["status"] ==0:
             new_status="已付款"
@@ -716,11 +678,11 @@ def getOrders(orderNumber):
         try:
             mycursor.execute("SELECT * FROM order_model JOIN attraction ON order_model.attraction_id=attraction.id WHERE order_number=%s",(orderNumber,))
             result = mycursor.fetchall()
-            # 將訂購總金額計算出來
+           
             mycursor.execute("SELECT SUM(price) FROM order_model JOIN attraction ON order_model.attraction_id=attraction.id WHERE order_number=%s",(orderNumber,))
             total= mycursor.fetchone()
            
-            # 這邊先將
+          
             if result != None:
 
                 data_value=[]
@@ -761,11 +723,9 @@ def getOrders(orderNumber):
                     }
                 }
                 json_result=jsonify(data)
-                # print(json_result)
                 mycursor.close()
                 connection_object.close()
                 return make_response(json_result,200) 
-                # return "111" 
             else:
                 data={
                 "error": True,
@@ -777,7 +737,6 @@ def getOrders(orderNumber):
                 return json_result,400
                 
         except Exception as e:
-            # print(e)
             data={
                 "error": True,
                 "message":"伺服器錯誤"
@@ -791,14 +750,13 @@ def getOrders(orderNumber):
                 "error":True,
                 "message":"請先登入會員"
             }
-        # print(data)
         json_result=jsonify(data) 
         return make_response(json_result,403)  
 @app.route("/api/historyOrders/<memberID>",methods=["GET"])
 def historyOrders(memberID):
-    # 一定要先登入,先檢查是否有登入
+
     cookie=request.cookies.get("Set-Cookie")
-    # print(cookie)
+
     if cookie != None:
         decode= jwt.decode(cookie, "secretJWT", ['HS256'])
         memberId=decode["id"]
@@ -845,20 +803,14 @@ def historyOrders(memberID):
         # print(data)
         json_result=jsonify(data) 
         return make_response(json_result,403)  
-# 連接到aws s3
-# client = boto3.client('s3')
-# print(client,"123")
+
 aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID")
 aws_secret_access_key=os.getenv("AWS_SECRECT_ACCESS_KEY")
 s3 = boto3.resource('s3',
     aws_access_key_id=aws_access_key_id,
     aws_secret_access_key=aws_secret_access_key,
     region_name="ap-northeast-1")
-# for bucket in s3.buckets.all():
-#     print(bucket.name)
-   
-# Upload a new file
-# s3.Bucket('taipeibucket').put_object(Key='test.jpg', Body=data)
+
 @app.route("/api/images",methods=["POST"])
 def updateImg():
 # 一定要先登入,先檢查是否有登入
@@ -870,7 +822,6 @@ def updateImg():
         member_name=decode["name"]
         member_email=decode["email"]
         img=request.files["img"]
-        print(img)
         s3.Bucket('taipeibucket').put_object(Key=img.filename, Body=img)
         return "上傳成功"  
     else:
@@ -878,12 +829,12 @@ def updateImg():
                 "error":True,
                 "message":"請先登入會員"
             }
-        # print(data)
+       
         json_result=jsonify(data) 
         return make_response(json_result,403)  
 @app.route("/api/images",methods=["GET"])
 def checkImg():
-    # 一定要先登入,先檢查是否有登入
+   
     cookie=request.cookies.get("Set-Cookie")
     # print(cookie)
     if cookie != None:
@@ -895,27 +846,16 @@ def checkImg():
 
         try:
             obj=s3.Object(bucket_name="taipeibucket", key=key)
-            # print(obj)
             response = obj.get()
-            # print(response,"obj")
 
             image_data = response['Body'].read()
             base64_data = base64.b64encode(image_data).decode()
             base64_data = "data:image/jpeg;base64," + base64_data
-            # data={
-            #     "image":base64_data,
-            # }
-            # json_result=jsonify(data) 
-            
+
             return make_response(base64_data,200)  
             
         except Exception as e:
-            # print(f'圖片 {key} 不存在')
-            # print(e)
-            # data={
-            #     "image":None,
-            # }
-            # json_result=jsonify(data)
+          
             return "False" 
     else:
         data={
@@ -929,14 +869,13 @@ def checkImg():
 # 會員頁面資料更新api
 @app.route("/api/member",methods=["POST"])
 def apiMembers():
-     # 一定要先登入,先檢查是否有登入
+     
     cookie=request.cookies.get("Set-Cookie")
     if cookie != None:
         decode= jwt.decode(cookie, "secretJWT", ['HS256'])
         member_id=decode["id"]
         member_name=decode["name"]
-        # 從前端接收資料
-        #前端接收資料
+       
         data=request.json
         name=request.json["name"]
         email=request.json["email"]
@@ -945,14 +884,7 @@ def apiMembers():
         emergencyName=request.json["emergencyName"]
         emergencyPhone=request.json["emergencyPhone"]
         gender=request.json["gender"]
-        # print(data)
-        # print(name)
-        # print(email)
-        # print(phone)
-        # print(birthday)
-        # print(emergencyName)
-        # print(emergencyPhone)
-        # print(gender)
+        
         connection_object = connection_pool.get_connection()
         mycursor = connection_object.cursor()
         try:

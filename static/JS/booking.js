@@ -7,36 +7,34 @@ function reservation() {
         openLogin();
         return
     }
-    // 如有登入就跳轉到booking
+   
     window.location.replace("/booking");
 }
-// 在booking 頁面時也要確認是否有登入
+
 fetch("/api/user/auth", {
         method: "GET",
     })
     .then((response) => {
-        // 這裡會得到一個 ReadableStream 的物件
-        // 可以透過 blob(), json(), text() 轉成可用的資訊
+        
         return response.json();
     }).then((jsonData) => {
         if (jsonData.data == false) {
-            // 使用者沒有登入的話就導向首頁
+          
             window.location.href = "/";
         }
-        // 顯示在booking頁面登入者資料
+       
         document.getElementById("booking_name").innerHTML = "您好 , " + bookingName + " ,待預定的行程如下"
-        // 將登入者的信箱跟名字自動放入input
+      
         document.getElementById("input_contact_name").value = bookingName;
         document.getElementById("input_contact_mail").value = bookingEmail;
     })
 
 let total_price = 0;
-// 先讓尚未付款的預約行程存在全域
+
 let attractionName ="";
 fetch("/api/booking", {})
     .then((response) => {
-        // 這裡會得到一個 ReadableStream 的物件
-        // 可以透過 blob(), json(), text() 轉成可用的資訊
+       
         return response.json();
     }).then((jsonData) => {
         if (jsonData.data == "") {
@@ -55,25 +53,19 @@ fetch("/api/booking", {})
 
         }
         attractionName = jsonData.data;
-        // console.log(attractionName,"jsbooking")
         for (let i = 0; i < jsonData.data.length; i++) {
-            // 新增一個連結在最外層
-            // 建立booking_content 容器 並放入一開始在html建立的content
             const content = document.getElementById("booking_content");
-            // 新增一個連結在最外層
             const bookingDiv = document.createElement("div");
             bookingDiv.id = `booking_detail ${i}`;
             content.appendChild(bookingDiv);
 
-            // 建立圖片的容器
             const attraction_content = document.getElementById(`booking_detail ${i}`);
             const img = document.createElement("img");
             img.id = "booking_photo";
             img.src = jsonData.data[i].attraction.image;
-            // 將圖片放在attraction_content容器下面
             attraction_content.appendChild(img);
 
-            // 建立information
+           
             const informationElement = document.createElement("div");
             informationElement.id = `booking_information ${i}`;
             attraction_content.appendChild(informationElement);
@@ -162,13 +154,11 @@ fetch("/api/booking", {})
             trashImg.id = "trash_icon";
             trashImg.setAttribute("src", `/static/images/icon_delete.png`);
             trashImg.setAttribute("onclick", `bookingDelete()`);
-            // 將圖片放在attraction_content容器下面
+           
             trashDiv.appendChild(trashImg);
 
-            // 總預約行程價錢
+           
             total_price = total_price + jsonData.data[i].price;
-            console.log(total_price);
-            // 並將總價顯示在頁面上
             document.getElementById("total").innerHTML = "總價新台幣 : " + total_price + "元";
 
         }
@@ -183,21 +173,18 @@ function bookingDelete() {
         trashParent = e.target.parentNode.id
         strAry = trashParent.split(" ");
         let indexID = strAry[1];
-        console.log(indexID)
+      
         fetch("/api/booking", {})
             .then((response) => {
-                // 這裡會得到一個 ReadableStream 的物件
-                // 可以透過 blob(), json(), text() 轉成可用的資訊
+               
                 return response.json();
             }).then((jsonData) => {
 
                 reservationID = jsonData.data[indexID].reservationID
-                // console.log(jsonData.data[indexID].reservationID,"訂單編號函式裡面")
-                // console.log(reservationID,"訂單編號這邊")
+               
                 data = {
                     reservationID: reservationID,
                 };
-                console.log(data, "request")
                 fetch("/api/booking", {
                         method: "DELETE",
                         body: JSON.stringify(data),
@@ -207,12 +194,11 @@ function bookingDelete() {
                         })
                     })
                     .then((response) => {
-                        // 這裡會得到一個 ReadableStream 的物件
-                        // 可以透過 blob(), json(), text() 轉成可用的資訊
+                       
                         return response.json();
                     }).then((jsonData) => {
                         if (jsonData.ok == true) {
-                            // 刪除訂購資訊再重新整理頁面
+                          
                             window.location.href = "/booking";
                         }
                     })
